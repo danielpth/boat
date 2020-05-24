@@ -50,3 +50,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+*.cw~
+src\boat\remote\Debug\*
+src\boat\Control\Debug\*
