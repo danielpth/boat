@@ -52,5 +52,6 @@ Mkfile.old
 dkms.conf
 
 *.cw~
-src\boat\remote\Debug\*
-src\boat\Control\Debug\*
+src/boat/remote/Debug/*
+src/boat/Control/Debug/*
+src/boat/.vs/*
