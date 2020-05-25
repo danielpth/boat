@@ -46,13 +46,33 @@ int usart_getchar(FILE *stream)
 
 FILE uart_str = FDEV_SETUP_STREAM(usart_putchar, usart_getchar, _FDEV_SETUP_RW);
 
+void step_motor (unsigned int pos)
+{
+
+	// valor minimo para PWM = 800
+	// valor maximo para pwm = 4500
+	// resolucao = 4500 - 800 = 3700
+	// 3700 / 1023 = 3,62
+	// multiplica por 36 e divide por 10	
+	if (pos > 1023) pos = 1023;
+	
+	pos *= 36;
+	pos /= 10;
+	pos += 800;
+	
+	if (pos < 800) pos = 800;
+	if (pos > 4500) pos = 4500;
+	OCR1AH = pos >> 8;
+	OCR1AL = pos & 0xFF;
+}
+
 void main(void)
 {
 	// Declare your local variables here
 	int i, motor, rudder;
 	stdout = &uart_str;
 	stdin = &uart_str;
-
+	
 	// Crystal Oscillator division factor: 1
 	#pragma optsize-
 	CLKPR=(1<<CLKPCE);
@@ -63,9 +83,9 @@ void main(void)
 
 	// Input/Output Ports initialization
 	// Port B initialization
-	// Function: Bit7=In Bit6=In Bit5=Out Bit4=In Bit3=Out Bit2=Out Bit1=In Bit0=In
-	DDRB=(0<<DDB7) | (0<<DDB6) | (1<<DDB5) | (0<<DDB4) | (1<<DDB3) | (1<<DDB2) | (0<<DDB1) | (0<<DDB0);
-	// State: Bit7=T Bit6=T Bit5=0 Bit4=T Bit3=0 Bit2=0 Bit1=T Bit0=T
+	// Function: Bit7=In Bit6=In Bit5=Out Bit4=In Bit3=Out Bit2=Out Bit1=Out Bit0=In
+	DDRB=(0<<DDB7) | (0<<DDB6) | (1<<DDB5) | (0<<DDB4) | (1<<DDB3) | (1<<DDB2) | (1<<DDB1) | (0<<DDB0);
+	// State: Bit7=T Bit6=T Bit5=0 Bit4=T Bit3=0 Bit2=0 Bit1=0 Bit0=T
 	PORTB=(0<<PORTB7) | (0<<PORTB6) | (0<<PORTB5) | (0<<PORTB4) | (0<<PORTB3) | (0<<PORTB2) | (0<<PORTB1) | (0<<PORTB0);
 
 	// Port C initialization
@@ -98,39 +118,39 @@ void main(void)
 
 	// Timer/Counter 1 initialization
 	// Clock source: System Clock
-	// Clock value: Timer1 Stopped
-	// Mode: Normal top=0xFFFF
-	// OC1A output: Disconnected
+	// Clock value: 2000,000 kHz
+	// Mode: Fast PWM top=ICR1
+	// OC1A output: Non-Inverted PWM
 	// OC1B output: Disconnected
 	// Noise Canceler: Off
 	// Input Capture on Falling Edge
+	// Timer Period: 20 ms
+	// Output Pulse(s):
+	// OC1A Period: 20 ms Width: 0,29601 ms
 	// Timer1 Overflow Interrupt: Off
 	// Input Capture Interrupt: Off
 	// Compare A Match Interrupt: Off
 	// Compare B Match Interrupt: Off
-	TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
-	TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (0<<WGM12) | (0<<CS12) | (0<<CS11) | (0<<CS10);
+	TCCR1A=(1<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (1<<WGM11) | (0<<WGM10);
+	TCCR1B=(0<<ICNC1) | (0<<ICES1) | (1<<WGM13) | (1<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
 	TCNT1H=0x00;
 	TCNT1L=0x00;
-	ICR1H=0x00;
-	ICR1L=0x00;
-	OCR1AH=0x00;
-	OCR1AL=0x00;
+	ICR1H=0x9C;
+	ICR1L=0x3E;
+	OCR1AH=0x0A;
+	OCR1AL=0x28;
 	OCR1BH=0x00;
 	OCR1BL=0x00;
 
 	// Timer/Counter 2 initialization
 	// Clock source: System Clock
-	// Clock value: 250,000 kHz
-	// Mode: Fast PWM top=0xFF
-	// OC2A output: Non-Inverted PWM
+	// Clock value: Timer2 Stopped
+	// Mode: Normal top=0xFF
+	// OC2A output: Disconnected
 	// OC2B output: Disconnected
-	// Timer Period: 1,024 ms
-	// Output Pulse(s):
-	// OC2A Period: 1,024 ms Width: 0 us
 	ASSR=(0<<EXCLK) | (0<<AS2);
-	TCCR2A=(1<<COM2A1) | (0<<COM2A0) | (0<<COM2B1) | (0<<COM2B0) | (1<<WGM21) | (1<<WGM20);
-	TCCR2B=(0<<WGM22) | (1<<CS22) | (0<<CS21) | (0<<CS20);
+	TCCR2A=(0<<COM2A1) | (0<<COM2A0) | (0<<COM2B1) | (0<<COM2B0) | (0<<WGM21) | (0<<WGM20);
+	TCCR2B=(0<<WGM22) | (0<<CS22) | (0<<CS21) | (0<<CS20);
 	TCNT2=0x00;
 	OCR2A=0x00;
 	OCR2B=0x00;
@@ -213,6 +233,8 @@ void main(void)
 		
 		if (i == 2) {
 			OCR0A = motor >> 2;
+			//OCR2B = rudder >> 2;
+			step_motor (rudder);
 		}
 
 		//printf ("i=%d motor=%d rudder=%d\n\r", i, motor, rudder);
