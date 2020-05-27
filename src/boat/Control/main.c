@@ -1,5 +1,6 @@
 #include <atmel_start.h>
 #include <util/delay.h>
+#include "RF24/RF24.h"
 
 
 // Declare your global variables here
@@ -66,7 +67,7 @@ void step_motor (unsigned int pos)
 	OCR1AL = pos & 0xFF;
 }
 
-void main(void)
+int main(void)
 {
 	// Declare your local variables here
 	int i, motor, rudder;
@@ -221,6 +222,8 @@ void main(void)
 	// TWI disabled
 	TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 
+	RF24_RF24(1, 2);
+	RF24_begin();
 	while (1)
 	{
 		// Place your code here
