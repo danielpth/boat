@@ -662,6 +662,8 @@ void LcdUpdate ( void )
 --------------------------------------------------------------------------------------------------*/
 static void LcdSend ( char data, LcdCmdData cd )
 {
+	// enable SPI
+	SPCR=(0<<SPIE) | (1<<SPE) | (0<<DORD) | (1<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
     //  Enable display controller (active low).
     PORTB &= ~LCD_CE_PIN;
 
@@ -685,6 +687,8 @@ static void LcdSend ( char data, LcdCmdData cd )
 	
 	// Only for 38Khz share pin for remote controle
 	PORTB &= ~LCD_DC_PIN;
+	// disable SPI
+	SPCR=(0<<SPIE) | (0<<SPE) | (0<<DORD) | (0<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
 }
 
 /*--------------------------------------------------------------------------------------------------

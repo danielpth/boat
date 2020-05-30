@@ -214,24 +214,6 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="RF24\nRF24L01.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="RF24\RF24.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="RF24\RF24.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="RF24\RF24_config.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="RF24\utility\ATMega328p\RF24_arch_config.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="RF24\utility\includes.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\driver_init.c">
       <SubType>compile</SubType>
     </Compile>
@@ -239,6 +221,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\protected_io.S">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="trf\trf.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="trf\trf.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="utils\assembler.h">
@@ -271,9 +259,7 @@
     <Folder Include="doxygen\" />
     <Folder Include="doxygen\generator\" />
     <Folder Include="include\" />
-    <Folder Include="RF24" />
-    <Folder Include="RF24\utility" />
-    <Folder Include="RF24\utility\ATMega328p" />
+    <Folder Include="trf" />
     <Folder Include="src\" />
     <Folder Include="utils\" />
     <Folder Include="utils\assembler\" />

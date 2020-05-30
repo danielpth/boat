@@ -1,7 +1,8 @@
 #include <atmel_start.h>
 #include <util/delay.h>
 #include "NokiaLCD.h"
-#include "RF24/RF24.h"
+//#include "RF24/RF24.h"
+#include "trf/trf.h"
 
 // Declare your global variables here
 
@@ -58,9 +59,7 @@ FILE display_str = FDEV_SETUP_STREAM(display_putchar, NULL, _FDEV_SETUP_WRITE);
 int main(void)
 {
 	// Declare your local variables here
-	int i, j;
-unsigned char addresses[][6] = {"1Node","2Node"};
-unsigned long payload = 0;
+	int i = 0, j = 0;
 	
 	stdout = &uart_str;
 	stdin = &uart_str;
@@ -195,7 +194,8 @@ unsigned long payload = 0;
 	// SPI Clock Phase: Cycle Start
 	// SPI Clock Polarity: Low
 	// SPI Data Order: MSB First
-	SPCR=(0<<SPIE) | (1<<SPE) | (0<<DORD) | (1<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
+	//SPCR=(0<<SPIE) | (1<<SPE) | (0<<DORD) | (1<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
+	SPCR=(0<<SPIE) | (0<<SPE) | (0<<DORD) | (0<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
 	SPSR=(0<<SPI2X);
 
 	// TWI initialization
@@ -203,39 +203,28 @@ unsigned long payload = 0;
 	TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 
 	LcdInit ();
-	RF24_RF24();
-	i = RF24_begin();
-	if (i) printf ("Radio OK\n\r");
-	
-	RF24_setAutoAck(1); // Ensure autoACK is enabled
-	//RF24_enableAckPayload();               // Allow optional ack payloads
-	//RF24_setRetries(0,15); // Max delay between retries & number of retries
-	RF24_openWritingPipe(addresses[0]); // Write to device address '2Node'
-	RF24_openReadingPipe(1,addresses[1]); // Read on pipe 1 for device address '1Node'
-	//RF24_startListening(); // Start listening
-RF24_stopListening();
+	trf_init();
 	while (1)
 	{
 		// Place your code here
 		LcdClear ();
 
 		i = read_adc(6);
-		//printf ("%d ", i);
-		fprintf (&uart_str, "%d ", i);
+		trf_send_buf[0] = i>>2;
+		//fprintf (&uart_str, "%d ", i);
 		LcdGotoXY (0, 0);
 		fprintf(&display_str, "Throttle: %d", i);
 
 		i = read_adc(7);
-		fprintf (&uart_str, "%d\n\r", i);
+		trf_send_buf[1] = i>>2;
+		//fprintf (&uart_str, "%d\n\r", i);
 		LcdGotoXY (0, 1);
 		fprintf(&display_str, "Rudder: %d", i - 511);
 		
-		//j = scanf ("%d", &i);
-		j = 0;
 		if (j > 0) {
-			i = i * 19;
+			j *= 19;
 			LcdGotoXY (0, 3);
-			fprintf(&display_str, "Boat: %d.%d V", i/1000, (i%1000)/100);
+			fprintf(&display_str, "Boat: %d.%d V", j/1000, (j%1000)/100);
 		}
 
 		i = read_adc(5) * 19;
@@ -244,11 +233,18 @@ RF24_stopListening();
 
 		LcdUpdate ();
 		
+		trf_send();
+		i = 300;
+		while(((PITRF_DR1 & (1<<TRF_DR1)) != (1<<TRF_DR1)) && (i > 0)) {
+			i--;
+			_delay_ms(1);
+		}
 		
-	  payload++;
-	  RF24_write (&payload, sizeof(payload));
-	  _delay_ms(300);
-
-
+		if (i > 0) {
+			trf_recv();
+			j = trf_recv_buf_1[0] << 2;
+		} else {
+			j = 0;
+		}
 	}
 }
