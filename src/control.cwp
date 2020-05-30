@@ -82,7 +82,7 @@ PCMSK=0
 PCMSKHI=0
 [Timer0]
 T0ClkSource=0
-T0Prescaler=3
+T0Prescaler=1
 T0Mode=3
 T0Output=1
 T0OutputB=0

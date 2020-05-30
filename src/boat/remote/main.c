@@ -59,7 +59,7 @@ FILE display_str = FDEV_SETUP_STREAM(display_putchar, NULL, _FDEV_SETUP_WRITE);
 int main(void)
 {
 	// Declare your local variables here
-	int i = 0, j = 0;
+	int i = 0, j = 0, disconnected = 20;
 	
 	stdout = &uart_str;
 	stdin = &uart_str;
@@ -208,27 +208,36 @@ int main(void)
 	{
 		// Place your code here
 		LcdClear ();
+		
+		if (disconnected < 20) {
+			LcdGotoXY (0, 0);
+			fprintf(&display_str, "Connected");
+			
+		} else {
+			LcdGotoXY (0, 0);
+			fprintf(&display_str, "Disconnected");			
+		}
 
 		i = read_adc(6);
 		trf_send_buf[0] = i>>2;
 		//fprintf (&uart_str, "%d ", i);
-		LcdGotoXY (0, 0);
+		LcdGotoXY (0, 1);
 		fprintf(&display_str, "Throttle: %d", i);
 
 		i = read_adc(7);
 		trf_send_buf[1] = i>>2;
 		//fprintf (&uart_str, "%d\n\r", i);
-		LcdGotoXY (0, 1);
+		LcdGotoXY (0, 2);
 		fprintf(&display_str, "Rudder: %d", i - 511);
 		
 		if (j > 0) {
 			int v = j * 19;
-			LcdGotoXY (0, 3);
+			LcdGotoXY (0, 4);
 			fprintf(&display_str, "Boat: %d.%d V", v/1000, (v%1000)/100);
 		}
 
 		i = read_adc(5) * 19;
-		LcdGotoXY (0, 2);
+		LcdGotoXY (0, 3);
 		fprintf(&display_str, "Remote: %d.%d V", i/1000, (i%1000)/100);
 
 		LcdUpdate ();
@@ -244,8 +253,9 @@ int main(void)
 			trf_recv();
 			_delay_ms(5);
 			j = trf_recv_buf_1[0] << 2;
+			disconnected = 0;
 		} else {
-			//j = 0;
+			if (disconnected < 100) disconnected++;
 		}
 	}
 }

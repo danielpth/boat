@@ -101,15 +101,15 @@ int main(void)
 
 	// Timer/Counter 0 initialization
 	// Clock source: System Clock
-	// Clock value: 250,000 kHz
+	// Clock value: 16000,000 kHz
 	// Mode: Fast PWM top=0xFF
 	// OC0A output: Non-Inverted PWM
 	// OC0B output: Disconnected
-	// Timer Period: 1,024 ms
+	// Timer Period: 0,016 ms
 	// Output Pulse(s):
-	// OC0A Period: 1,024 ms Width: 0 us
+	// OC0A Period: 0,016 ms Width: 0 us
 	TCCR0A=(1<<COM0A1) | (0<<COM0A0) | (0<<COM0B1) | (0<<COM0B0) | (1<<WGM01) | (1<<WGM00);
-	TCCR0B=(0<<WGM02) | (0<<CS02) | (1<<CS01) | (1<<CS00);
+	TCCR0B=(0<<WGM02) | (0<<CS02) | (0<<CS01) | (1<<CS00);
 	TCNT0=0x00;
 	OCR0A=0x00;
 	OCR0B=0x00;
