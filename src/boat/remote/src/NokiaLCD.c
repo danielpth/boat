@@ -18,6 +18,7 @@
 //#include <mega328p.h>
 //#include <stdio.h>
 #include <atmel_start.h>
+#include <util/delay.h>
 
 #include "NokiaLCD.h"
 
@@ -338,7 +339,7 @@ void LcdGotoXY ( char x, char y )
 --------------------------------------------------------------------------------------------------*/
 void LcdChr ( LcdFontSize size, char ch )
 {
-    char i, c;
+    unsigned int i, c;
     char b1, b2;
     int  tmpIdx;
 

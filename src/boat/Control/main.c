@@ -71,16 +71,16 @@ int main(void)
 {
 	// Declare your local variables here
 	int i, motor, rudder;
+
+unsigned char addresses[][6] = {"1Node","2Node"};
+unsigned long payload = 0;
+
 	stdout = &uart_str;
 	stdin = &uart_str;
 	
 	// Crystal Oscillator division factor: 1
-	#pragma optsize-
 	CLKPR=(1<<CLKPCE);
 	CLKPR=(0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
-	#ifdef _OPTIMIZE_SIZE_
-	#pragma optsize+
-	#endif
 
 	// Input/Output Ports initialization
 	// Port B initialization
@@ -96,9 +96,9 @@ int main(void)
 	PORTC=(0<<PORTC6) | (0<<PORTC5) | (0<<PORTC4) | (0<<PORTC3) | (0<<PORTC2) | (0<<PORTC1) | (0<<PORTC0);
 
 	// Port D initialization
-	// Function: Bit7=In Bit6=Out Bit5=Out Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
-	DDRD=(0<<DDD7) | (1<<DDD6) | (1<<DDD5) | (0<<DDD4) | (0<<DDD3) | (0<<DDD2) | (0<<DDD1) | (0<<DDD0);
-	// State: Bit7=T Bit6=0 Bit5=0 Bit4=T Bit3=T Bit2=T Bit1=T Bit0=T
+	// Function: Bit7=In Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=In Bit1=In Bit0=In
+	DDRD=(0<<DDD7) | (1<<DDD6) | (1<<DDD5) | (1<<DDD4) | (1<<DDD3) | (0<<DDD2) | (0<<DDD1) | (0<<DDD0);
+	// State: Bit7=T Bit6=0 Bit5=0 Bit4=0 Bit3=0 Bit2=T Bit1=T Bit0=T
 	PORTD=(0<<PORTD7) | (0<<PORTD6) | (0<<PORTD5) | (0<<PORTD4) | (0<<PORTD3) | (0<<PORTD2) | (0<<PORTD1) | (0<<PORTD0);
 
 	// Timer/Counter 0 initialization
@@ -222,16 +222,22 @@ int main(void)
 	// TWI disabled
 	TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 
-	RF24_RF24(1, 2);
-	RF24_begin();
-	while (1)
+	RF24_RF24();
+	i = RF24_begin();
+	if (i) printf ("Radio OK\n\r");
+	
+  RF24_setAutoAck(1); // Ensure autoACK is enabled
+  //RF24_enableAckPayload();               // Allow optional ack payloads
+  //RF24_setRetries(0,15); // Max delay between retries & number of retries
+  RF24_openWritingPipe(addresses[1]); // Write to device address '2Node'
+  RF24_openReadingPipe(1,addresses[0]); // Read on pipe 1 for device address '1Node'
+  RF24_startListening(); // Start listening
+  //RF24_stopListening();
+
+  	while (1)
 	{
 		// Place your code here
-		//i = 0xffff;
-		//while (i--) ;
-		//OCR0A++;
-		//OCR0B++;
-		
+	#if 0
 		i = scanf ("%d %d", &motor, &rudder);
 		
 		if (i == 2) {
@@ -244,5 +250,22 @@ int main(void)
 		
 		i = read_adc(7);
 		printf("%d\n\r", i);
+	#endif
+
+#if 1
+  if ( RF24_available() ){ // Describe the results
+	  unsigned long got_time; // Grab the response, compare, and send to debugging spew
+	  RF24_read( &got_time, sizeof(unsigned long) );
+	  printf ("Recv: %lx", got_time);
+  }
+#endif
+#if 0
+		payload++;
+		RF24_write (&payload, sizeof(payload));
+		_delay_ms(300);
+#endif
+
+  // Try again 1s later
+  //_delay_ms(1000);
 	}
 }

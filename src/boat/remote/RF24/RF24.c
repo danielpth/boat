@@ -252,7 +252,7 @@ unsigned char RF24_read_payload(void* buf, unsigned char data_len)
 unsigned char RF24_flush_rx(void)
 {
 	printf ("RF24_flush_rx\n\r");
-    return RF24_spiTrans(FLUSH_RX);
+	return RF24_spiTrans(FLUSH_RX);
 }
 
 /****************************************************************************/
@@ -260,7 +260,7 @@ unsigned char RF24_flush_rx(void)
 unsigned char RF24_flush_tx(void)
 {
 	printf ("RF24_flush_tx\n\r");
-    return RF24_spiTrans(FLUSH_TX);
+	return RF24_spiTrans(FLUSH_TX);
 }
 
 /****************************************************************************/
@@ -283,7 +283,7 @@ unsigned char RF24_get_status(void)
 {
 	unsigned char status = RF24_spiTrans(RF24_NOP);
 	printf ("RF24_get_status %x\n\r", status);
-	return status;
+    return status;
 }
 
 /****************************************************************************/
@@ -359,6 +359,24 @@ void RF24_RF24()
     pipe0_reading_address[0] = 0;
 	_delay_ms (150);
 }
+
+/****************************************************************************/
+
+#if defined(RF24_LINUX) && !defined(MRAA)//RPi constructor
+
+RF24_RF24(unsigned short _cepin, unsigned short _cspin, uint32_t _spi_speed)
+{
+	ce_pin = _cepin;
+	csn_pin = _cspin;
+	spi_speed = _spi_speed;
+	p_variant = false;
+	payload_size = 32;
+	dynamic_payloads_enabled = false;
+	addr_width = 5;
+	//pipe0_reading_address = 0; 
+    pipe0_reading_address[0]=0;
+}
+#endif
 
 /****************************************************************************/
 
@@ -527,6 +545,7 @@ bool RF24_begin(void)
     // Reset NRF_CONFIG and enable 16-bit CRC.
     RF24_write_register1(NRF_CONFIG, _BV(PRIM_RX) | _BV(PWR_UP) | _BV(EN_CRC));
     _delay_ms(5);
+
 #if 1
     // Set 1500uS (minimum for 32B payload in ESB@250KBPS) timeouts, to make testing a little easier
     // WARNING: If this is ever lowered, either 250KBS mode with AA is broken or maximum packet
@@ -535,7 +554,6 @@ bool RF24_begin(void)
 
     // Reset value is MAX
     //setPALevel( RF24_PA_MAX ) ;
-	RF24_setPALevel (RF24_PA_LOW);
 
 
     // check for connected module and if this is a p nRF24l01 variant
@@ -610,7 +628,7 @@ void RF24_startListening(void)
     RF24_write_register1(NRF_STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
     RF24_ce(HIGH);
 	
-	#if 0
+#if 0	
     // Restore the pipe0 adddress, if exists
     if (pipe0_reading_address[0] > 0) {
         RF24_write_register(RX_ADDR_P0, pipe0_reading_address, addr_width);
@@ -672,7 +690,7 @@ void RF24_powerUp(void)
 
         // For nRF24L01+ to go from power down mode to TX or RX mode it must first pass through stand-by mode.
         // There must be a delay of Tpd2stby (see Table 16.) after the nRF24L01+ leaves power down mode before
-        // the CE is set high. - Tpd2stby can be up to 5ms per the 1.0 datasheet
+        // the CEis set high. - Tpd2stby can be up to 5ms per the 1.0 datasheet
         _delay_ms (5);
     }
 }
@@ -698,25 +716,25 @@ void RF24_errNotify()
 //Similar to the previous write, clears the interrupt flags
 bool RF24_write_multi(const void* buf, unsigned char len, const bool multicast)
 {
-	//Start Writing
-	RF24_startFastWrite(buf, len, multicast, true);
+    //Start Writing
+    RF24_startFastWrite(buf, len, multicast, true);
 
-	while (!(RF24_get_status() & (_BV(TX_DS) | _BV(MAX_RT)))) {
+    while (!(RF24_get_status() & (_BV(TX_DS) | _BV(MAX_RT)))) {
 		printf ("Waiting\n\r");
 		_delay_ms(10);
-	}
+    }
 
-	RF24_ce(LOW);
+    RF24_ce(LOW);
 
-	unsigned char status = RF24_write_register1(NRF_STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
+    unsigned char status = RF24_write_register1(NRF_STATUS, _BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT));
 
-	//Max retries exceeded
-	if (status & _BV(MAX_RT)) {
-		RF24_flush_tx(); //Only going to be 1 packet int the FIFO at a time using this method, so just flush
-		return 0;
-	}
-	//TX OK 1 or 0
-	return 1;
+    //Max retries exceeded
+    if (status & _BV(MAX_RT)) {
+        RF24_flush_tx(); //Only going to be 1 packet int the FIFO at a time using this method, so just flush
+        return 0;
+    }
+    //TX OK 1 or 0
+    return 1;
 }
 
 bool RF24_write(const void* buf, unsigned char len)
@@ -1011,7 +1029,7 @@ void RF24_openWritingPipe(const unsigned char* address)
 
     //const unsigned char max_payload_size = 32;
     //RF24_write_register(RX_PW_P0,rf24_min(payload_size,max_payload_size));
-    //RF24_write_register1(RX_PW_P0, payload_size);
+    RF24_write_register1(RX_PW_P0, payload_size);
 }
 
 /****************************************************************************/
