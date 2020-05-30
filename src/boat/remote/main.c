@@ -222,9 +222,9 @@ int main(void)
 		fprintf(&display_str, "Rudder: %d", i - 511);
 		
 		if (j > 0) {
-			j *= 19;
+			int v = j * 19;
 			LcdGotoXY (0, 3);
-			fprintf(&display_str, "Boat: %d.%d V", j/1000, (j%1000)/100);
+			fprintf(&display_str, "Boat: %d.%d V", v/1000, (v%1000)/100);
 		}
 
 		i = read_adc(5) * 19;
@@ -234,7 +234,7 @@ int main(void)
 		LcdUpdate ();
 		
 		trf_send();
-		i = 300;
+		i = 50;
 		while(((PITRF_DR1 & (1<<TRF_DR1)) != (1<<TRF_DR1)) && (i > 0)) {
 			i--;
 			_delay_ms(1);
@@ -242,9 +242,10 @@ int main(void)
 		
 		if (i > 0) {
 			trf_recv();
+			_delay_ms(5);
 			j = trf_recv_buf_1[0] << 2;
 		} else {
-			j = 0;
+			//j = 0;
 		}
 	}
 }

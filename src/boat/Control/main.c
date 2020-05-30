@@ -104,16 +104,15 @@ int main(void)
 	// Clock value: 250,000 kHz
 	// Mode: Fast PWM top=0xFF
 	// OC0A output: Non-Inverted PWM
-	// OC0B output: Inverted PWM
+	// OC0B output: Disconnected
 	// Timer Period: 1,024 ms
 	// Output Pulse(s):
 	// OC0A Period: 1,024 ms Width: 0 us
-	// OC0B Period: 1,024 ms Width: 0 us
-	TCCR0A=(1<<COM0A1) | (0<<COM0A0) | (1<<COM0B1) | (1<<COM0B0) | (1<<WGM01) | (1<<WGM00);
+	TCCR0A=(1<<COM0A1) | (0<<COM0A0) | (0<<COM0B1) | (0<<COM0B0) | (1<<WGM01) | (1<<WGM00);
 	TCCR0B=(0<<WGM02) | (0<<CS02) | (1<<CS01) | (1<<CS00);
 	TCNT0=0x00;
 	OCR0A=0x00;
-	OCR0B=0xFF;
+	OCR0B=0x00;
 
 	// Timer/Counter 1 initialization
 	// Clock source: System Clock
@@ -239,7 +238,7 @@ int main(void)
 			i = read_adc(7);
 			trf_send_buf[0] = i >> 2;
 			// printf ("%d %d %d\n\r", trf_recv_buf_1[0], trf_recv_buf_1[1], trf_send_buf[0]);
-			_delay_ms(50);
+			_delay_ms(5);
 			trf_send();
 		} else {
 			OCR0A = 0;

@@ -3,7 +3,7 @@
 #include "trf.h"
 
 unsigned char trf_conf[15] = {
-0xF7, // Frequency channel - RX=1 or TX=0 operation
+0x77, // Frequency channel - RX=1 or TX=0 operation
 0x4F, // Enable two channel receive mode - Communication mode ( Direct or ShockBurst) - RF data rate (1Mbps requires 16MHz crystal) - Crystal frequency (Factory default 16MHz crystal mounted) - RF output power
 0x43, // Number of address bits(both RX channels) - 8 or 16 bits CRC - Enable on-chip CRC generation/checking
 0x01, // Up to 5 bytes address for channel 1
@@ -239,7 +239,7 @@ void trf_2_tx()
 	delay_us(TRF_TD);
 	// Entra em Configuration
 	POTRF_CS |= (1<<TRF_CS);
-	//delay_us(TRF_TSBY2RX); // Espera um pouco mais
+	delay_us(TRF_TSBY2RX); // Espera um pouco mais
 	delay_us(TRF_TCS2DATA);
 
 	// Define o pino de data como saida
@@ -255,7 +255,7 @@ void trf_2_tx()
 	delay_us(TRF_TCS2DATA);
 	POTRF_CS &= ~(1<<TRF_CS);
 	delay_us(TRF_TD);
-	POTRF_CE &= ~(1<<TRF_CE);
+	POTRF_CE |= (1<<TRF_CE);
 
 	// Define o pino de data como entrada
 	DTRF_DATA &= ~(1<<TRF_DATA);

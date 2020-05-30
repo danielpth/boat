@@ -43,28 +43,32 @@
 // Valores em us
 #define TRF_TPD2SBY 3000
 #define TRF_TPD2A 3000
-#define TRF_TD 1
+#define TRF_TD 2
 #define TRF_TCS2DATA 10
 #define TRF_TCE2DATA 10
 #define TRF_TSBY2TXSB 200
-#define TRF_TDR2CLK 1
-#define TRF_TCLK2DATA 1
+#define TRF_TDR2CLK 2
+#define TRF_TCLK2DATA 2
 #define TRF_TSBY2RX 205
 
 //TOA = 1/datarate * (#databits +1)
 // datarate = 250kbps / 1Mbps
 // #databits = DATAx_W + ADDR_W + CRC_W (+1 eh do preamble)
-// #databits = 128 + 16 + 16 + 1 = 75
+// #databits = 128 + 16 + 16 + 1 = 161
 //#define TOA (128 + 16 + 16 + 1)*1000/250; // us
 #define TOA 650 // us
 
-#define TRF_TH 5
-#define TRF_TS 5
+//#define TRF_TH 5
+//#define TRF_TS 5
+
+#define TRF_TH 10
+#define TRF_TS 10
 
 #define TRF_DATA1_W trf_conf[13]
 #define TRF_DATA2_W trf_conf[14]
 
-#define TRF_BUFFER_SIZE 16
+//#define TRF_BUFFER_SIZE 16
+#define TRF_BUFFER_SIZE 4
 
 extern unsigned char trf_conf[15];
 extern unsigned char trf_recv_buf_1[TRF_BUFFER_SIZE];
