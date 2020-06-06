@@ -1,6 +1,7 @@
 #include <atmel_start.h>
 #include <util/delay.h>
-#include "RF24/RF24.h"
+//#include "RF24/RF24.h"
+#include "trf/trf.h"
 
 
 // Declare your global variables here
@@ -70,10 +71,7 @@ void step_motor (unsigned int pos)
 int main(void)
 {
 	// Declare your local variables here
-	int i, motor, rudder;
-
-unsigned char addresses[][6] = {"1Node","2Node"};
-unsigned long payload = 0;
+	int i;
 
 	stdout = &uart_str;
 	stdin = &uart_str;
@@ -103,19 +101,18 @@ unsigned long payload = 0;
 
 	// Timer/Counter 0 initialization
 	// Clock source: System Clock
-	// Clock value: 250,000 kHz
+	// Clock value: 16000,000 kHz
 	// Mode: Fast PWM top=0xFF
 	// OC0A output: Non-Inverted PWM
-	// OC0B output: Inverted PWM
-	// Timer Period: 1,024 ms
+	// OC0B output: Disconnected
+	// Timer Period: 0,016 ms
 	// Output Pulse(s):
-	// OC0A Period: 1,024 ms Width: 0 us
-	// OC0B Period: 1,024 ms Width: 0 us
-	TCCR0A=(1<<COM0A1) | (0<<COM0A0) | (1<<COM0B1) | (1<<COM0B0) | (1<<WGM01) | (1<<WGM00);
-	TCCR0B=(0<<WGM02) | (0<<CS02) | (1<<CS01) | (1<<CS00);
+	// OC0A Period: 0,016 ms Width: 0 us
+	TCCR0A=(1<<COM0A1) | (0<<COM0A0) | (0<<COM0B1) | (0<<COM0B0) | (1<<WGM01) | (1<<WGM00);
+	TCCR0B=(0<<WGM02) | (0<<CS02) | (0<<CS01) | (1<<CS00);
 	TCNT0=0x00;
 	OCR0A=0x00;
-	OCR0B=0xFF;
+	OCR0B=0x00;
 
 	// Timer/Counter 1 initialization
 	// Clock source: System Clock
@@ -215,57 +212,37 @@ unsigned long payload = 0;
 	// SPI Clock Phase: Cycle Start
 	// SPI Clock Polarity: Low
 	// SPI Data Order: MSB First
-	SPCR=(0<<SPIE) | (1<<SPE) | (0<<DORD) | (1<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
+	//SPCR=(0<<SPIE) | (1<<SPE) | (0<<DORD) | (1<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
+	SPCR=(0<<SPIE) | (0<<SPE) | (0<<DORD) | (0<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
 	SPSR=(0<<SPI2X);
 
 	// TWI initialization
 	// TWI disabled
 	TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 
-	RF24_RF24();
-	i = RF24_begin();
-	if (i) printf ("Radio OK\n\r");
-	
-  RF24_setAutoAck(1); // Ensure autoACK is enabled
-  //RF24_enableAckPayload();               // Allow optional ack payloads
-  //RF24_setRetries(0,15); // Max delay between retries & number of retries
-  RF24_openWritingPipe(addresses[1]); // Write to device address '2Node'
-  RF24_openReadingPipe(1,addresses[0]); // Read on pipe 1 for device address '1Node'
-  RF24_startListening(); // Start listening
-  //RF24_stopListening();
+	trf_init();
 
   	while (1)
 	{
 		// Place your code here
-	#if 0
-		i = scanf ("%d %d", &motor, &rudder);
-		
-		if (i == 2) {
-			OCR0A = motor >> 2;
-			//OCR2B = rudder >> 2;
-			step_motor (rudder);
+		i = 3000;
+        while(((PITRF_DR1 & (1<<TRF_DR1)) != (1<<TRF_DR1)) && (i > 0)) {
+			i--;
+			_delay_ms(1);
 		}
-
-		//printf ("i=%d motor=%d rudder=%d\n\r", i, motor, rudder);
 		
-		i = read_adc(7);
-		printf("%d\n\r", i);
-	#endif
-
-#if 1
-  if ( RF24_available() ){ // Describe the results
-	  unsigned long got_time; // Grab the response, compare, and send to debugging spew
-	  RF24_read( &got_time, sizeof(unsigned long) );
-	  printf ("Recv: %lx", got_time);
-  }
-#endif
-#if 0
-		payload++;
-		RF24_write (&payload, sizeof(payload));
-		_delay_ms(300);
-#endif
-
-  // Try again 1s later
-  //_delay_ms(1000);
+		if (i > 0) {
+	        trf_recv();
+			OCR0A = trf_recv_buf_1[0];
+			step_motor (trf_recv_buf_1[1] << 2);
+			i = read_adc(7);
+			trf_send_buf[0] = i >> 2;
+			// printf ("%d %d %d\n\r", trf_recv_buf_1[0], trf_recv_buf_1[1], trf_send_buf[0]);
+			_delay_ms(5);
+			trf_send();
+		} else {
+			OCR0A = 0;
+			step_motor (511);
+		}
 	}
 }
